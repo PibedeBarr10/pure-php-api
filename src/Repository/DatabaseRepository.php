@@ -53,7 +53,7 @@ class DatabaseRepository
         }
     }
 
-    public function create($input): void
+    public function create(array $input): void
     {
         $statement = "
             INSERT INTO " . $this->tableName . " (first_name, last_name, city)
@@ -72,7 +72,7 @@ class DatabaseRepository
         }
     }
 
-    public function delete($id): void
+    public function delete(int $id): void
     {
         $statement = "
             DELETE FROM " . $this->tableName . "

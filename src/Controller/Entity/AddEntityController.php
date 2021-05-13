@@ -36,7 +36,7 @@ class AddEntityController
         return $this->jsonResponse;
     }
 
-    private function validate($input): bool
+    private function validate(array $input): bool
     {
         return (empty($input['first_name'])
             || empty($input['last_name'])

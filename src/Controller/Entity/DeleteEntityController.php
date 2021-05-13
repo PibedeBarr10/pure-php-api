@@ -19,7 +19,7 @@ class DeleteEntityController
         $this->jsonResponse = new JsonResponse();
     }
 
-    public function deleteEntity($id): JsonResponse
+    public function deleteEntity(int $id): JsonResponse
     {
         $result = $this->databaseRepository->find($id);
 

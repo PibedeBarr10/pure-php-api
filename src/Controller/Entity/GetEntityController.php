@@ -50,9 +50,9 @@ class GetEntityController
 
     private function isColumn(array $requestData, array $data): bool
     {
-        foreach ($requestData as $str)
+        foreach ($requestData as $value)
         {
-            if (!in_array($str, $data)) {
+            if (!in_array($value, $data)) {
                 return false;
             }
         }
