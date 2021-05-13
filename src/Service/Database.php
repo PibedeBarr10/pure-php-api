@@ -2,21 +2,24 @@
 
 namespace App\Service;
 
+use PDO;
+use PDOException;
+
 class Database
 {
-    private $host;
-    private $port;
-    private $db_name;
-    private $username;
-    private $password;
-    private $dbConnection = null;
+    private string $host;
+    private string $port;
+    private string $db_name;
+    private string $username;
+    private string $password;
+    private PDO $dbConnection;
 
     public function __construct(
-        $host,
-        $port,
-        $db_name,
-        $username,
-        $password
+        string $host,
+        string $port,
+        string $db_name,
+        string $username,
+        string $password
     )
     {
         $this->host = $host;
@@ -26,17 +29,21 @@ class Database
         $this->password = $password;
 
         try {
-            $this->dbConnection = new \PDO(
+            $this->dbConnection = new PDO(
                 "mysql:host=$this->host;port=$this->port;charset=utf8mb4;dbname=$this->db_name",
                 $this->username,
                 $this->password
             );
-        } catch (\PDOException $e) {
+            $this->dbConnection->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+            $this->dbConnection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+        } catch (PDOException $e) {
             exit($e->getMessage());
         }
     }
 
-    public function getConnection() {
+    public function getConnection(): PDO
+    {
         return $this->dbConnection;
     }
 }
