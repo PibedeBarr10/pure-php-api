@@ -12,5 +12,5 @@ $dotenv->load();
 $API = new APIController();
 $result = $API->processRequest();
 
-echo $result;
+echo $result->getResponse();
 

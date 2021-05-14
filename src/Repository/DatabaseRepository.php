@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Repository;
 
 use PDO;
@@ -17,10 +16,10 @@ class DatabaseRepository
         $this->tableName = $tableName;
     }
 
-    public function find(int $id, array $data): array
+    public function find(int $id, array $requestedColumns): array
     {
         $statement = "
-            SELECT " . implode(', ', $data) . "
+            SELECT " . implode(', ', $requestedColumns) . "
             FROM " . $this->tableName . "
             WHERE id = :id;
         ";
@@ -37,10 +36,10 @@ class DatabaseRepository
         }
     }
 
-    public function findAll(array $data): array
+    public function findAll(array $requestedColumns): array
     {
         $statement = "
-            SELECT " . implode(', ', $data) . " 
+            SELECT " . implode(', ', $requestedColumns) . " 
             FROM " . $this->tableName .";
         ";
 

@@ -1,12 +1,12 @@
 <?php
 
-
 namespace App\Controller;
 
 use App\Controller\Entity\AddEntityController;
 use App\Controller\Entity\DeleteEntityController;
 use App\Controller\Entity\GetAllEntitiesController;
 use App\Controller\Entity\GetEntityController;
+use App\Repository\DatabaseRepository;
 use App\Service\Database;
 use App\Service\JsonResponse;
 use App\Service\Request;
@@ -15,7 +15,7 @@ use PDO;
 class APIController
 {
     private PDO $dbConnection;
-    private JsonResponse $jsonResponse;
+    private DatabaseRepository $databaseRepository;
     private Request $request;
     private string $requestMethod;
     private int $userId = 0;
@@ -27,53 +27,63 @@ class APIController
             $_ENV['DB_PORT'],
             $_ENV['DB_DATABASE'],
             $_ENV['DB_USERNAME'],
-            $_ENV['DB_PASSWORD'],
+            $_ENV['DB_PASSWORD']
         );
         $this->dbConnection = $database->getConnection();
 
+        $this->databaseRepository = new DatabaseRepository($this->dbConnection, "client");
+
         $this->request = new Request();
-        $this->requestMethod = $this->request->getServerAttr("REQUEST_METHOD");
+        $this->requestMethod = $this->request->getRequestedMethod();
 
         if (array_key_exists('id', $this->request->getAllGetAttr())) {
             $this->userId = $this->request->getGetAttr('id');
         }
-
-        $this->jsonResponse = new JsonResponse();
     }
 
-    public function processRequest(): string
+    public function processRequest(): JsonResponse
     {
         switch ($this->requestMethod) {
             case 'GET':
                 if ($this->userId) {
-                    $getEntityController = new GetEntityController($this->dbConnection, "client");
-                    $this->jsonResponse = $getEntityController->getEntity($this->userId);
+                    $getEntityController = new GetEntityController(
+                        $this->databaseRepository,
+                        $this->request
+                    );
+                    $jsonResponse = $getEntityController->getEntity($this->userId);
                 } else {
-                    $getAllEntitiesController = new GetAllEntitiesController($this->dbConnection, "client");
-                    $this->jsonResponse = $getAllEntitiesController->getAllEntities();
+                    $getAllEntitiesController = new GetAllEntitiesController(
+                        $this->databaseRepository,
+                        $this->request
+                    );
+                    $jsonResponse = $getAllEntitiesController->getAllEntities();
                 }
                 break;
             case 'POST':
-                $addEntityController = new AddEntityController($this->dbConnection, "client");
-                $this->jsonResponse = $addEntityController->addEntity();
+                $addEntityController = new AddEntityController(
+                    $this->databaseRepository,
+                    $this->request
+                );
+                $jsonResponse = $addEntityController->addEntity();
                 break;
             case 'DELETE':
-                $deleteEntityController = new DeleteEntityController($this->dbConnection, "client");
-                $this->jsonResponse = $deleteEntityController->deleteEntity($this->userId);
+                $deleteEntityController = new DeleteEntityController($this->databaseRepository);
+                $jsonResponse = $deleteEntityController->deleteEntity($this->userId);
                 break;
             default:
-                $this->notFoundEntity();
+                $jsonResponse = $this->notFoundMethod();
                 break;
         }
 
-        return $this->jsonResponse->getResponse();
+        return $jsonResponse;
     }
 
-    private function notFoundEntity(): JsonResponse
+    private function notFoundMethod(): JsonResponse
     {
-        $this->jsonResponse->setStatus('HTTP/1.1 404 Not Found');
-        $this->jsonResponse->setBodyResponse(array('Nie ma takiej encji'));
+        $jsonResponse = new JsonResponse();
+        $jsonResponse->setStatus('HTTP/1.1 404 Not Found');
+        $jsonResponse->setBodyResponse(array('Nie ma takiej operacji'));
 
-        return $this->jsonResponse;
+        return $jsonResponse;
     }
 }

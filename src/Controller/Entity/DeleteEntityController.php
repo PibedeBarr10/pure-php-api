@@ -1,27 +1,24 @@
 <?php
 
-
 namespace App\Controller\Entity;
-
 
 use App\Repository\DatabaseRepository;
 use App\Service\JsonResponse;
-use PDO;
 
 class DeleteEntityController
 {
     private DatabaseRepository $databaseRepository;
-    private JsonResponse $jsonResponse;
 
-    public function __construct(PDO $dbConnection, string $tableName)
+    public function __construct(DatabaseRepository $databaseRepository)
     {
-        $this->databaseRepository = new DatabaseRepository($dbConnection, $tableName);
-        $this->jsonResponse = new JsonResponse();
+        $this->databaseRepository = $databaseRepository;
     }
 
     public function deleteEntity(int $id): JsonResponse
     {
-        $result = $this->databaseRepository->find($id);
+        $data = array('id', 'first_name', 'last_name', 'city');
+
+        $result = $this->databaseRepository->find($id, $data);
 
         if (!$result) {
             return $this->notFoundEntity();
@@ -29,17 +26,19 @@ class DeleteEntityController
 
         $this->databaseRepository->delete($id);
 
-        $this->jsonResponse->setStatus('HTTP/1.1 200 OK');
-        $this->jsonResponse->setBodyResponse(array('Usunięto encję'));
+        $jsonResponse = new JsonResponse();
+        $jsonResponse->setStatus('HTTP/1.1 200 OK');
+        $jsonResponse->setBodyResponse(array('Usunięto encję'));
 
-        return $this->jsonResponse;
+        return $jsonResponse;
     }
 
     private function notFoundEntity(): JsonResponse
     {
-        $this->jsonResponse->setStatus('HTTP/1.1 404 Not Found');
-        $this->jsonResponse->setBodyResponse(array('Nie ma takiej encji'));
+        $jsonResponse = new JsonResponse();
+        $jsonResponse->setStatus('HTTP/1.1 404 Not Found');
+        $jsonResponse->setBodyResponse(array('Nie ma takiej encji'));
 
-        return $this->jsonResponse;
+        return $jsonResponse;
     }
 }

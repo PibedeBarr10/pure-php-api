@@ -1,58 +1,54 @@
 <?php
 
-
 namespace App\Controller\Entity;
-
 
 use App\Repository\DatabaseRepository;
 use App\Service\JsonResponse;
 use App\Service\Request;
-use PDO;
 
 class GetEntityController
 {
     private DatabaseRepository $databaseRepository;
     private Request $request;
-    private JsonResponse $jsonResponse;
 
-    public function __construct(PDO $dbConnection, string $tableName)
+    public function __construct(DatabaseRepository $databaseRepository, Request $request)
     {
-        $this->databaseRepository = new DatabaseRepository($dbConnection, $tableName);
-        $this->request = new Request();
-        $this->jsonResponse = new JsonResponse();
+        $this->databaseRepository = $databaseRepository;
+        $this->request = $request;
     }
 
     public function getEntity(int $id): JsonResponse
     {
-        $data = array('id', 'first_name', 'last_name', 'city');
+        $columns = array('id', 'first_name', 'last_name', 'city');
 
         if (array_key_exists('column', $this->request->getAllGetAttr())) {
-            $requestData = $this->request->getGetAttr('column');
-            $requestData = explode(", ",$requestData);
+            $requestedColumns = $this->request->getGetAttr('column');
+            $requestedColumns = explode(", ",$requestedColumns);
 
             # Prevent SQL injection
-            if ($this->isColumn($requestData, $data)) {
-                $data = $requestData;
+            if ($this->isColumn($requestedColumns, $columns)) {
+                $columns = $requestedColumns;
             }
         }
 
-        $result = $this->databaseRepository->find($id, $data);
+        $result = $this->databaseRepository->find($id, $columns);
 
         if (!$result) {
             return $this->notFoundEntity();
         }
 
-        $this->jsonResponse->setStatus('HTTP/1.1 200 OK');
-        $this->jsonResponse->setBodyResponse($result);
+        $jsonResponse = new JsonResponse();
+        $jsonResponse->setStatus('HTTP/1.1 200 OK');
+        $jsonResponse->setBodyResponse($result);
 
-        return $this->jsonResponse;
+        return $jsonResponse;
     }
 
-    private function isColumn(array $requestData, array $data): bool
+    private function isColumn(array $requestedColumns, array $allColumns): bool
     {
-        foreach ($requestData as $value)
+        foreach ($requestedColumns as $column)
         {
-            if (!in_array($value, $data)) {
+            if (!in_array($column, $allColumns)) {
                 return false;
             }
         }
@@ -61,9 +57,10 @@ class GetEntityController
 
     private function notFoundEntity(): JsonResponse
     {
-        $this->jsonResponse->setStatus('HTTP/1.1 404 Not Found');
-        $this->jsonResponse->setBodyResponse(array('Nie ma takiej encji'));
+        $jsonResponse = new JsonResponse();
+        $jsonResponse->setStatus('HTTP/1.1 404 Not Found');
+        $jsonResponse->setBodyResponse(array('Nie ma takiej encji'));
 
-        return $this->jsonResponse;
+        return $jsonResponse;
     }
 }

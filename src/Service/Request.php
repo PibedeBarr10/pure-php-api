@@ -1,8 +1,6 @@
 <?php
 
-
 namespace App\Service;
-
 
 class Request
 {
@@ -17,9 +15,9 @@ class Request
         $this->post = $_POST;
     }
 
-    public function getServerAttr(string $key): string
+    public function getRequestedMethod(): string
     {
-        return $this->server[$key];
+        return $this->server["REQUEST_METHOD"];
     }
 
     public function getGetAttr(string $key): string
